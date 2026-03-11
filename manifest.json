@@ -1,0 +1,26 @@
+{
+  "name": "RemindX – Akıllı Hatırlatma",
+  "short_name": "RemindX",
+  "description": "Gelişmiş hatırlatma uygulaması - bildirim ve mail desteği",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06060c",
+  "theme_color": "#7c5cfc",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/7c5cfc/ffffff?text=R",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/7c5cfc/ffffff?text=R",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "tr"
+}
