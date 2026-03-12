@@ -1,1636 +1,724 @@
 <!DOCTYPE html>
-
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0a0a0f">
-<meta name="description" content="Gelişmiş Hatırlatma Uygulaması">
-<title>RemindX – Akıllı Hatırlatma</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#070712">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RemindX</title>
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #06060c;
-    --surface: #0e0e1a;
-    --surface2: #141428;
-    --border: rgba(120,100,255,0.15);
-    --accent: #7c5cfc;
-    --accent2: #c084fc;
-    --accent3: #06d6a0;
-    --danger: #ff4d6d;
-    --text: #e8e6ff;
-    --muted: rgba(232,230,255,0.45);
-    --font: 'Syne', sans-serif;
-    --mono: 'DM Mono', monospace;
-  }
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* BG mesh */
-  body::before {
-    content:'';
-    position:fixed;
-    inset:0;
-    background:
-      radial-gradient(ellipse 60% 50% at 20% 10%, rgba(124,92,252,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 80% 80%, rgba(192,132,252,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 30% 30% at 50% 50%, rgba(6,214,160,0.04) 0%, transparent 60%);
-    pointer-events:none;
-    z-index:0;
-  }
-
-  .app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding:0 0 100px; }
-
-  /* HEADER */
-  header {
-    padding: 32px 20px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-  }
-
-  .logo-text {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #fff 30%, var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .header-right {
-    display: flex;
-    gap: 8px;
-  }
-
-  .icon-btn {
-    width: 40px; height: 40px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    font-size: 18px;
-    transition: all 0.2s;
-    color: var(--text);
-  }
-  .icon-btn:hover { background: var(--surface2); border-color: var(--accent); }
-
-  /* STATS */
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    padding: 0 16px 20px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px 12px;
-    text-align: center;
-    transition: transform 0.2s;
-  }
-  .stat-card:hover { transform: translateY(-2px); }
-
-  .stat-num {
-    font-size: 28px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .stat-num.purple { color: var(--accent2); }
-  .stat-num.green { color: var(--accent3); }
-  .stat-num.red { color: var(--danger); }
-
-  .stat-label {
-    font-size: 10px;
-    color: var(--muted);
-    font-family: var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  /* DATE NAV */
-  .date-nav {
-    padding: 0 16px 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .date-nav::-webkit-scrollbar { display:none; }
-
-  .date-chip {
-    flex-shrink: 0;
-    padding: 8px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    min-width: 56px;
-  }
-
-  .date-chip .day-num {
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .date-chip .day-name {
-    font-size: 9px;
-    color: var(--muted);
-    font-family: var(--mono);
-    text-transform: uppercase;
-  }
-
-  .date-chip.active {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-
-  .date-chip.active .day-name { color: rgba(255,255,255,0.7); }
-  .date-chip.has-tasks .day-num::after {
-    content: '·';
-    color: var(--accent3);
-    margin-left: 2px;
-  }
-
-  /* SECTION TITLE */
-  .section-title {
-    padding: 8px 20px 12px;
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  /* REMINDER CARDS */
-  .reminders-list {
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .reminder-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 16px;
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-    transition: all 0.3s;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .reminder-card::before {
-    content:'';
-    position:absolute;
-    left:0; top:0; bottom:0;
-    width: 3px;
-    border-radius: 3px 0 0 3px;
-    background: var(--accent);
-    transition: width 0.3s;
-  }
-
-  .reminder-card.priority-high::before { background: var(--danger); }
-  .reminder-card.priority-medium::before { background: #f59e0b; }
-  .reminder-card.priority-low::before { background: var(--accent3); }
-  .reminder-card.done { opacity: 0.4; }
-  .reminder-card.done .reminder-title { text-decoration: line-through; }
-
-  .reminder-card:hover {
-    border-color: var(--accent);
-    transform: translateX(2px);
-  }
-
-  .check-circle {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    flex-shrink: 0;
-    margin-top: 2px;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    transition: all 0.2s;
-    font-size: 12px;
-  }
-
-  .check-circle.checked {
-    background: var(--accent3);
-    border-color: var(--accent3);
-  }
-
-  .check-circle:hover { border-color: var(--accent3); }
-
-  .reminder-content { flex: 1; min-width: 0; }
-
-  .reminder-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .reminder-meta {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .meta-tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    background: rgba(120,100,255,0.1);
-    color: var(--accent2);
-    border: 1px solid rgba(120,100,255,0.2);
-  }
-  .meta-tag.time { color: var(--accent3); background: rgba(6,214,160,0.08); border-color: rgba(6,214,160,0.2); }
-  .meta-tag.repeat { color: #f59e0b; background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
-  .meta-tag.mail { color: var(--accent2); }
-
-  .reminder-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .action-dot {
-    width: 28px; height: 28px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-    border: 1px solid transparent;
-  }
-
-  .action-dot:hover { background: var(--surface2); border-color: var(--border); }
-  .action-dot.delete:hover { color: var(--danger); border-color: rgba(255,77,109,0.3); }
-
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--muted);
-  }
-  .empty-icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-text { font-size: 14px; line-height: 1.6; }
-
-  /* FAB */
-  .fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 20px;
-    display: grid;
-    place-items: center;
-    font-size: 28px;
-    cursor: pointer;
-    box-shadow: 0 8px 32px rgba(124,92,252,0.4);
-    transition: all 0.3s;
-    border: none;
-    color: white;
-    z-index: 100;
-  }
-  .fab:hover { transform: scale(1.08) rotate(5deg); box-shadow: 0 12px 40px rgba(124,92,252,0.6); }
-  .fab:active { transform: scale(0.95); }
-
-  /* MODAL */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(6,6,12,0.85);
-    backdrop-filter: blur(12px);
-    z-index: 200;
-    display: flex;
-    align-items: flex-end;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .modal {
-    width: 100%;
-    max-width: 480px;
-    margin: 0 auto;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 28px 28px 0 0;
-    padding: 24px 20px 40px;
-    transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  .modal-overlay.open .modal {
-    transform: translateY(0);
-  }
-
-  .modal-handle {
-    width: 40px; height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 0 auto 20px;
-  }
-
-  .modal-title {
-    font-size: 22px;
-    font-weight: 800;
-    margin-bottom: 24px;
-    background: linear-gradient(135deg, #fff 50%, var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  /* FORM */
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    display: block;
-  }
-
-  .form-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 16px;
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 15px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .form-input:focus { border-color: var(--accent); }
-  .form-input::placeholder { color: var(--muted); }
-
-  textarea.form-input {
-    resize: none;
-    height: 80px;
-    line-height: 1.5;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .select-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 16px;
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    appearance: none;
-    cursor: pointer;
-  }
-  .select-input:focus { border-color: var(--accent); }
-
-  /* TOGGLE */
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    margin-bottom: 16px;
-  }
-
-  .toggle-info { flex: 1; }
-  .toggle-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-  .toggle-desc { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-
-  .toggle {
-    width: 48px; height: 26px;
-    background: var(--surface);
-    border-radius: 13px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s;
-    flex-shrink: 0;
-  }
-
-  .toggle::after {
-    content:'';
-    position:absolute;
-    left: 3px; top: 3px;
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all 0.3s;
-  }
-
-  .toggle.on {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-
-  .toggle.on::after {
-    left: 25px;
-    background: white;
-  }
-
-  /* EMAIL INPUT */
-  .email-section {
-    background: rgba(124,92,252,0.06);
-    border: 1px solid rgba(124,92,252,0.2);
-    border-radius: 14px;
-    padding: 14px;
-    margin-bottom: 16px;
-  }
-
-  .email-section-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent2);
-    margin-bottom: 10px;
-    font-family: var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  /* PRIORITY SELECTOR */
-  .priority-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .priority-btn {
-    padding: 10px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    cursor: pointer;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s;
-    color: var(--muted);
-  }
-
-  .priority-btn.selected-low { background: rgba(6,214,160,0.15); border-color: var(--accent3); color: var(--accent3); }
-  .priority-btn.selected-medium { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #f59e0b; }
-  .priority-btn.selected-high { background: rgba(255,77,109,0.15); border-color: var(--danger); color: var(--danger); }
-
-  /* SUBMIT BTN */
-  .submit-btn {
-    width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none;
-    border-radius: 16px;
-    color: white;
-    font-family: var(--font);
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 8px;
-  }
-
-  .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
-  .submit-btn:active { transform: translateY(0); }
-
-  /* NOTIFICATION BADGE */
-  .notif-badge {
-    position: absolute;
-    top: -4px; right: -4px;
-    width: 18px; height: 18px;
-    background: var(--danger);
-    border-radius: 50%;
-    font-size: 10px;
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-  }
-
-  /* BOTTOM NAV */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(14,14,26,0.9);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 0 20px;
-    z-index: 99;
-  }
-
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 12px;
-    transition: all 0.2s;
-    font-size: 20px;
-    position: relative;
-    color: var(--muted);
-  }
-
-  .nav-item.active { color: var(--accent2); }
-  .nav-item:hover { color: var(--text); }
-
-  .nav-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100px);
-    background: var(--surface2);
-    border: 1px solid var(--accent);
-    border-radius: 14px;
-    padding: 12px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    z-index: 999;
-    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.success { border-color: var(--accent3); }
-  .toast.error { border-color: var(--danger); }
-
-  /* SETTINGS PANEL */
-  .settings-panel {
-    padding: 0 16px;
-  }
-
-  .settings-section {
-    margin-bottom: 24px;
-  }
-
-  .settings-heading {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 12px;
-    padding: 0 4px;
-  }
-
-  .settings-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    overflow: hidden;
-  }
-
-  .settings-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .settings-item:last-child { border-bottom: none; }
-  .settings-item:hover { background: var(--surface2); }
-
-  .settings-item-left { display: flex; align-items: center; gap: 12px; }
-  .settings-item-icon { font-size: 20px; }
-  .settings-item-text { font-size: 14px; font-weight: 500; }
-  .settings-item-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
-  .settings-item-right { color: var(--muted); font-size: 12px; }
-
-  /* WEEKLY VIEW */
-  .weekly-grid {
-    padding: 0 16px;
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    margin-bottom: 16px;
-  }
-
-  .week-col {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 8px 4px;
-    text-align: center;
-  }
-
-  .week-col .wday {
-    font-family: var(--mono);
-    font-size: 8px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    letter-spacing: 0.5px;
-  }
-
-  .week-col .wcount {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--accent2);
-  }
-
-  .week-col .wdot {
-    width: 4px; height: 4px;
-    background: var(--accent3);
-    border-radius: 50%;
-    margin: 4px auto 0;
-    opacity: 0;
-  }
-
-  .week-col.has-tasks .wdot { opacity: 1; }
-  .week-col.today { border-color: var(--accent); }
-
-  /* ANIM */
-  @keyframes fadeIn {
-    from { opacity:0; transform:translateY(10px); }
-    to { opacity:1; transform:translateY(0); }
-  }
-
-  .reminder-card { animation: fadeIn 0.3s ease forwards; }
-
-  /* CATEGORY PILLS */
-  .category-bar {
-    display: flex;
-    gap: 8px;
-    padding: 0 16px 16px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .category-bar::-webkit-scrollbar { display:none; }
-
-  .cat-pill {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--muted);
-  }
-
-  .cat-pill.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
-
-  /* DETAIL MODAL */
-  .detail-body { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 12px 0; font-family: var(--mono); }
-  .detail-chips { display:flex; gap:8px; flex-wrap:wrap; margin: 12px 0; }
-
-  .btn-danger {
-    width:100%;
-    padding:14px;
-    background: rgba(255,77,109,0.1);
-    border: 1px solid rgba(255,77,109,0.3);
-    border-radius:14px;
-    color: var(--danger);
-    font-family:var(--font);
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:10px;
-    transition:all 0.2s;
-  }
-  .btn-danger:hover { background:rgba(255,77,109,0.2); }
+:root {
+  --bg: #070712;
+  --s1: #0f0f20;
+  --s2: #161628;
+  --s3: #1e1e35;
+  --border: rgba(130,100,255,0.14);
+  --border2: rgba(130,100,255,0.25);
+  --accent: #7c5cfc;
+  --accent2: #c084fc;
+  --green: #06d6a0;
+  --yellow: #f59e0b;
+  --red: #ff4d6d;
+  --text: #eae8ff;
+  --muted: rgba(234,232,255,0.42);
+  --font: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --radius: 18px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { height:100%; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 70% 45% at 15% 8%, rgba(124,92,252,0.13) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 40% at 85% 85%, rgba(192,132,252,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 30% at 55% 45%, rgba(6,214,160,0.04) 0%, transparent 55%);
+}
+.app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding-bottom:calc(80px + var(--safe-bottom)); }
+
+/* HEADER */
+header { padding:48px 20px 16px; display:flex; align-items:center; justify-content:space-between; }
+.logo { display:flex; align-items:center; gap:10px; }
+.logo-icon { width:38px; height:38px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:12px; display:grid; place-items:center; font-size:20px; box-shadow:0 4px 16px rgba(124,92,252,0.35); }
+.logo-text { font-size:24px; font-weight:800; letter-spacing:-0.5px; background:linear-gradient(135deg,#fff 40%,var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header-btns { display:flex; gap:8px; }
+.icon-btn { width:40px; height:40px; background:var(--s1); border:1px solid var(--border); border-radius:12px; display:grid; place-items:center; cursor:pointer; font-size:17px; transition:all .2s; flex-shrink:0; }
+.icon-btn:active { transform:scale(0.92); }
+
+/* STATS */
+.stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; padding:0 16px 20px; }
+.stat-card { background:var(--s1); border:1px solid var(--border); border-radius:var(--radius); padding:16px 10px; text-align:center; }
+.stat-num { font-size:30px; font-weight:800; line-height:1; margin-bottom:5px; }
+.stat-num.v { color:var(--accent2); } .stat-num.g { color:var(--green); } .stat-num.r { color:var(--red); }
+.stat-lbl { font-size:9px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.6px; }
+
+/* DATE NAV */
+.date-nav { padding:0 16px 16px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.date-nav::-webkit-scrollbar { display:none; }
+.date-chip { flex-shrink:0; padding:10px 14px; border-radius:20px; border:1px solid var(--border); background:var(--s1); cursor:pointer; text-align:center; min-width:54px; transition:all .2s; }
+.date-chip .dn { font-size:18px; font-weight:700; line-height:1; }
+.date-chip .dy { font-size:9px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; margin-top:2px; }
+.date-chip.active { background:var(--accent); border-color:var(--accent); box-shadow:0 4px 16px rgba(124,92,252,0.4); }
+.date-chip.active .dy { color:rgba(255,255,255,0.7); }
+.date-chip.has-rem::after { content:''; display:block; width:5px; height:5px; background:var(--green); border-radius:50%; margin:4px auto 0; }
+
+/* CATEGORY BAR */
+.cat-bar { display:flex; gap:8px; padding:0 16px 14px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.cat-bar::-webkit-scrollbar { display:none; }
+.cat-pill { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1px solid var(--border); background:var(--s1); font-size:12px; font-weight:600; cursor:pointer; color:var(--muted); transition:all .2s; white-space:nowrap; }
+.cat-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+/* SECTION */
+.sec-title { padding:6px 20px 12px; font-size:11px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; display:flex; align-items:center; justify-content:space-between; }
+
+/* REMINDER CARDS */
+.rem-list { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
+.rem-card {
+  background:var(--s1); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 14px 14px 18px; display:flex; gap:12px; align-items:center;
+  cursor:pointer; position:relative; overflow:hidden; transition:all .25s;
+  animation:fadeUp .3s ease forwards;
+}
+.rem-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent); border-radius:4px 0 0 4px; }
+.rem-card.ph::before { background:var(--red); }
+.rem-card.pm::before { background:var(--yellow); }
+.rem-card.pl::before { background:var(--green); }
+.rem-card.done { opacity:.38; }
+.rem-card.done .rem-title { text-decoration:line-through; }
+.rem-card:active { transform:scale(0.98); }
+.check-btn { width:26px; height:26px; border-radius:50%; border:2px solid var(--border2); flex-shrink:0; display:grid; place-items:center; cursor:pointer; font-size:13px; transition:all .2s; background:transparent; }
+.check-btn.on { background:var(--green); border-color:var(--green); }
+.rem-body { flex:1; min-width:0; }
+.rem-title { font-size:15px; font-weight:600; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rem-meta { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.tag { font-family:var(--mono); font-size:10px; padding:2px 8px; border-radius:6px; white-space:nowrap; }
+.tag.t { color:var(--green); background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.2); }
+.tag.c { color:var(--accent2); background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.2); }
+.tag.r { color:var(--yellow); background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); }
+.tag.tg { color:#29b6f6; background:rgba(41,182,246,0.1); border:1px solid rgba(41,182,246,0.2); }
+.del-btn { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; cursor:pointer; font-size:15px; flex-shrink:0; transition:all .2s; }
+.del-btn:active { background:rgba(255,77,109,0.15); }
+
+/* EMPTY */
+.empty { text-align:center; padding:52px 20px; color:var(--muted); }
+.empty-icon { font-size:52px; margin-bottom:16px; }
+.empty-txt { font-size:14px; line-height:1.7; }
+
+/* FAB */
+.fab {
+  position:fixed; bottom:calc(84px + var(--safe-bottom)); right:20px;
+  width:58px; height:58px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:18px; display:grid; place-items:center; font-size:28px;
+  cursor:pointer; border:none; color:#fff; z-index:100;
+  box-shadow:0 8px 28px rgba(124,92,252,0.45); transition:all .25s;
+}
+.fab:active { transform:scale(0.92); }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0;
+  background:rgba(10,10,22,0.95); backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex; justify-content:space-around;
+  padding:10px 0; padding-bottom:calc(10px + var(--safe-bottom));
+  z-index:99;
+}
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:6px 20px; border-radius:14px; font-size:22px; color:var(--muted); transition:all .2s; }
+.nav-item.active { color:var(--accent2); }
+.nav-item:active { transform:scale(0.9); }
+.nav-lbl { font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.5px; }
+
+/* MODAL / SHEET */
+.overlay { position:fixed; inset:0; background:rgba(5,5,15,0.88); backdrop-filter:blur(16px); z-index:200; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .3s; }
+.overlay.open { opacity:1; pointer-events:all; }
+.sheet {
+  width:100%; max-width:480px; margin:0 auto;
+  background:var(--s1); border:1px solid var(--border2);
+  border-radius:28px 28px 0 0;
+  padding:20px 20px calc(32px + var(--safe-bottom));
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(0.34,1.4,0.64,1);
+  max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.overlay.open .sheet { transform:translateY(0); }
+.sheet-handle { width:38px; height:4px; background:var(--border2); border-radius:2px; margin:0 auto 20px; }
+.sheet-title { font-size:22px; font-weight:800; margin-bottom:22px; background:linear-gradient(135deg,#fff 50%,var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+/* FORM */
+.fg { margin-bottom:14px; }
+.fl { font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:7px; display:block; }
+.fi { width:100%; background:var(--s2); border:1px solid var(--border); border-radius:14px; padding:13px 15px; color:var(--text); font-family:var(--font); font-size:15px; outline:none; transition:border-color .2s; -webkit-appearance:none; }
+.fi:focus { border-color:var(--accent); }
+.fi::placeholder { color:var(--muted); }
+textarea.fi { resize:none; height:72px; line-height:1.5; }
+select.fi { appearance:none; cursor:pointer; }
+.frow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* TOGGLE */
+.trow { display:flex; align-items:center; gap:14px; padding:13px 15px; background:var(--s2); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; }
+.tinfo { flex:1; min-width:0; }
+.ttitle { font-size:14px; font-weight:600; margin-bottom:2px; }
+.tsub { font-size:10px; color:var(--muted); font-family:var(--mono); }
+.tog { width:46px; height:26px; background:var(--s3); border-radius:13px; border:1px solid var(--border); cursor:pointer; position:relative; transition:all .3s; flex-shrink:0; }
+.tog::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:var(--muted); transition:all .3s; }
+.tog.on { background:var(--accent); border-color:var(--accent); }
+.tog.on::after { left:23px; background:#fff; }
+
+/* PRIORITY */
+.prow { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+.pbtn { padding:10px 6px; border-radius:12px; border:1px solid var(--border); background:var(--s2); cursor:pointer; text-align:center; font-size:12px; font-weight:600; color:var(--muted); transition:all .2s; }
+.pbtn.sl { background:rgba(6,214,160,0.15); border-color:var(--green); color:var(--green); }
+.pbtn.sm { background:rgba(245,158,11,0.15); border-color:var(--yellow); color:var(--yellow); }
+.pbtn.sh { background:rgba(255,77,109,0.15); border-color:var(--red); color:var(--red); }
+
+/* NOTIF COUNT */
+.nrow { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+.nopt { padding:10px 4px; border-radius:12px; border:1px solid var(--border); background:var(--s2); cursor:pointer; text-align:center; font-size:12px; font-weight:600; color:var(--muted); transition:all .2s; }
+.nopt.active { background:rgba(124,92,252,0.2); border-color:var(--accent); color:var(--accent2); }
+
+/* BUTTONS */
+.sbtn { width:100%; padding:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:16px; color:#fff; font-family:var(--font); font-size:16px; font-weight:700; cursor:pointer; margin-top:8px; transition:all .25s; }
+.sbtn:active { opacity:.88; transform:scale(0.98); }
+.dbtn { width:100%; padding:14px; background:rgba(255,77,109,0.1); border:1px solid rgba(255,77,109,0.25); border-radius:14px; color:var(--red); font-family:var(--font); font-size:14px; font-weight:600; cursor:pointer; margin-top:10px; transition:all .2s; }
+.dbtn:active { background:rgba(255,77,109,0.2); }
+
+/* SETTINGS */
+.sp { padding:0 16px; }
+.sh2 { font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; padding:0 4px; }
+.sc { background:var(--s1); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:22px; }
+.si { display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s; gap:12px; }
+.si:last-child { border-bottom:none; }
+.si:active { background:var(--s2); }
+.si-l { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.si-ico { font-size:20px; flex-shrink:0; }
+.si-txt { font-size:14px; font-weight:500; }
+.si-sub { font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:2px; }
+.si-r { color:var(--muted); font-size:12px; flex-shrink:0; }
+
+/* WEEKLY */
+.wgrid { padding:0 16px; display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:16px; }
+.wcol { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:8px 4px; text-align:center; cursor:pointer; transition:all .2s; }
+.wcol:active { transform:scale(0.95); }
+.wcol .wdy { font-family:var(--mono); font-size:8px; color:var(--muted); text-transform:uppercase; margin-bottom:5px; }
+.wcol .wcnt { font-size:17px; font-weight:800; color:var(--accent2); }
+.wcol.today { border-color:var(--accent); background:rgba(124,92,252,0.08); }
+.wcol.hasrem .wcnt { color:var(--green); }
+
+/* TOAST */
+.toast { position:fixed; top:56px; left:50%; transform:translateX(-50%) translateY(-120px); background:var(--s2); border:1px solid var(--border2); border-radius:14px; padding:11px 20px; font-size:13px; font-weight:600; z-index:999; transition:transform .35s cubic-bezier(0.34,1.4,0.64,1); white-space:nowrap; max-width:90vw; text-align:center; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.ok { border-color:var(--green); }
+.toast.err { border-color:var(--red); }
+
+/* DETAIL */
+.dbody { font-size:14px; color:var(--muted); line-height:1.7; margin:12px 0; font-family:var(--mono); }
+.dchips { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 </style>
-
 </head>
 <body>
-
 <div class="app">
+
   <header>
     <div class="logo">
       <div class="logo-icon">🔔</div>
       <div class="logo-text">RemindX</div>
     </div>
-    <div class="header-right">
-      <div class="icon-btn" onclick="openSettings()" title="Ayarlar">⚙️</div>
-      <div class="icon-btn" style="position:relative" onclick="testNotification()" title="Bildirim Test">
-        🔔
-        <span class="notif-badge" id="notifBadge" style="display:none">!</span>
-      </div>
+    <div class="header-btns">
+      <div class="icon-btn" onclick="openSettings()">⚙️</div>
+      <div class="icon-btn" onclick="testNotif()">🧪</div>
     </div>
   </header>
 
-  <!-- STATS -->
-
-  <div class="stats" id="statsArea">
-    <div class="stat-card">
-      <div class="stat-num purple" id="statTotal">0</div>
-      <div class="stat-label">Toplam</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num green" id="statDone">0</div>
-      <div class="stat-label">Tamamlandı</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num red" id="statPending">0</div>
-      <div class="stat-label">Bekliyor</div>
-    </div>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num v" id="sTotal">0</div><div class="stat-lbl">Toplam</div></div>
+    <div class="stat-card"><div class="stat-num g" id="sDone">0</div><div class="stat-lbl">Tamam</div></div>
+    <div class="stat-card"><div class="stat-num r" id="sPend">0</div><div class="stat-lbl">Bekliyor</div></div>
   </div>
 
-  <!-- VIEWS -->
-
-  <div id="viewDaily">
-    <!-- DATE NAV -->
+  <div id="vDaily">
     <div class="date-nav" id="dateNav"></div>
-
-```
-<!-- CATEGORY FILTER -->
-<div class="category-bar" id="catBar">
-  <div class="cat-pill active" onclick="filterCat(this,'all')">Tümü</div>
-  <div class="cat-pill" onclick="filterCat(this,'İş')">💼 İş</div>
-  <div class="cat-pill" onclick="filterCat(this,'Sağlık')">🏥 Sağlık</div>
-  <div class="cat-pill" onclick="filterCat(this,'Kişisel')">👤 Kişisel</div>
-  <div class="cat-pill" onclick="filterCat(this,'Toplantı')">📅 Toplantı</div>
-  <div class="cat-pill" onclick="filterCat(this,'İlaç')">💊 İlaç</div>
-</div>
-
-<div class="section-title">
-  <span id="sectionLabel">Bugünün Hatırlatmaları</span>
-  <span id="sectionCount" style="color:var(--accent2)"></span>
-</div>
-
-<div class="reminders-list" id="remindersList"></div>
-```
-
+    <div class="cat-bar">
+      <div class="cat-pill active" onclick="setCat(this,'all')">Tümü</div>
+      <div class="cat-pill" onclick="setCat(this,'İş')">💼 İş</div>
+      <div class="cat-pill" onclick="setCat(this,'Sağlık')">🏥 Sağlık</div>
+      <div class="cat-pill" onclick="setCat(this,'Kişisel')">👤 Kişisel</div>
+      <div class="cat-pill" onclick="setCat(this,'Toplantı')">📅 Toplantı</div>
+      <div class="cat-pill" onclick="setCat(this,'İlaç')">💊 İlaç</div>
+    </div>
+    <div class="sec-title">
+      <span id="secLbl">Bugünün Hatırlatmaları</span>
+      <span id="secCnt" style="color:var(--accent2)"></span>
+    </div>
+    <div class="rem-list" id="remList"></div>
   </div>
 
-  <div id="viewWeekly" style="display:none">
-    <div class="section-title">Haftalık Özet</div>
-    <div class="weekly-grid" id="weeklyGrid"></div>
-    <div class="section-title">Bu Haftaki Tüm Hatırlatmalar</div>
-    <div class="reminders-list" id="weeklyList"></div>
+  <div id="vWeekly" style="display:none">
+    <div class="sec-title">Haftalık Özet</div>
+    <div class="wgrid" id="wGrid"></div>
+    <div class="sec-title">Bu Haftaki Hatırlatmalar</div>
+    <div class="rem-list" id="wList"></div>
   </div>
 
-  <div id="viewSettings" style="display:none">
-    <div class="settings-panel">
-      <div class="settings-section">
-        <div class="settings-heading">Bildirimler</div>
-        <div class="settings-card">
-          <div class="settings-item" onclick="requestNotifPermission()">
-            <div class="settings-item-left">
-              <div class="settings-item-icon">🔔</div>
-              <div>
-                <div class="settings-item-text">Push Bildirimler</div>
-                <div class="settings-item-sub" id="notifStatus">İzin gerekli</div>
-              </div>
-            </div>
-            <div class="settings-item-right" id="notifStatusIcon">→</div>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-left">
-              <div class="settings-item-icon">⏰</div>
-              <div>
-                <div class="settings-item-text">Erken Hatırlatma</div>
-                <div class="settings-item-sub">Etkinlikten kaç dk önce</div>
-              </div>
-            </div>
-            <select class="select-input" style="width:auto;padding:6px 10px;font-size:12px" id="earlyRemind" onchange="saveSetting('earlyRemind',this.value)">
-              <option value="5">5 dk</option>
-              <option value="10" selected>10 dk</option>
-              <option value="15">15 dk</option>
-              <option value="30">30 dk</option>
-            </select>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-left">
-              <div class="settings-item-icon">📅</div>
-              <div>
-                <div class="settings-item-text">Günlük Özet Saati</div>
-                <div class="settings-item-sub">Her gün bu saatte özet</div>
-              </div>
-            </div>
-            <input type="time" class="form-input" style="width:auto;padding:6px 10px;font-size:12px" value="08:00" id="dailySummaryTime" onchange="saveSetting('dailySummaryTime',this.value)">
-          </div>
+  <div id="vSettings" style="display:none">
+    <div class="sp">
+
+      <div class="sh2">📱 Bildirimler</div>
+      <div class="sc">
+        <div class="si" onclick="askNotifPerm()">
+          <div class="si-l"><div class="si-ico">🔔</div><div><div class="si-txt">Push Bildirim İzni</div><div class="si-sub" id="notifSub">Tıkla → izin ver</div></div></div>
+          <div class="si-r" id="notifIco">→</div>
+        </div>
+        <div class="si">
+          <div class="si-l"><div class="si-ico">⏰</div><div><div class="si-txt">Kaç dakika önce</div><div class="si-sub">Etkinlikten önce hatırlat</div></div></div>
+          <select class="fi" style="width:auto;padding:7px 12px;font-size:13px;background:var(--s2);border-color:var(--border)" id="earlyMin" onchange="saveSt('earlyMin',this.value)">
+            <option value="0">Tam saatinde</option>
+            <option value="5">5 dk önce</option>
+            <option value="10" selected>10 dk önce</option>
+            <option value="15">15 dk önce</option>
+            <option value="30">30 dk önce</option>
+            <option value="60">1 saat önce</option>
+          </select>
+        </div>
+        <div class="si">
+          <div class="si-l"><div class="si-ico">📅</div><div><div class="si-txt">Günlük özet saati</div><div class="si-sub">Her sabah bildirim</div></div></div>
+          <input type="time" class="fi" style="width:auto;padding:7px 12px;font-size:13px;background:var(--s2);border-color:var(--border)" value="08:00" id="sumTime" onchange="saveSt('sumTime',this.value)">
         </div>
       </div>
 
-```
-  <div class="settings-section">
-    <div class="settings-heading">E-posta</div>
-    <div class="settings-card">
-      <div class="settings-item">
-        <div class="settings-item-left">
-          <div class="settings-item-icon">📧</div>
-          <div>
-            <div class="settings-item-text">Bildirim E-postası</div>
-            <div class="settings-item-sub" id="emailDisplay">Girilmedi</div>
-          </div>
+      <div class="sh2">💬 Telegram</div>
+      <div class="sc">
+        <div class="si" onclick="setTgToken()">
+          <div class="si-l"><div class="si-ico">🤖</div><div><div class="si-txt">Bot Token</div><div class="si-sub" id="tgTokenSub">Ayarlanmadı</div></div></div>
+          <div class="si-r" style="color:var(--accent2)">Düzenle</div>
         </div>
-        <div class="settings-item-right" onclick="promptEmail()" style="cursor:pointer;color:var(--accent2)">Düzenle</div>
-      </div>
-      <div class="settings-item">
-        <div class="settings-item-left">
-          <div class="settings-item-icon">📊</div>
-          <div>
-            <div class="settings-item-text">Haftalık Rapor</div>
-            <div class="settings-item-sub">Her Pazartesi sabahı</div>
-          </div>
+        <div class="si" onclick="setTgChat()">
+          <div class="si-l"><div class="si-ico">💬</div><div><div class="si-txt">Chat ID</div><div class="si-sub" id="tgChatSub">Ayarlanmadı</div></div></div>
+          <div class="si-r" style="color:var(--accent2)">Düzenle</div>
         </div>
-        <div class="toggle on" id="weeklyReportToggle" onclick="toggleSetting(this,'weeklyReport')"></div>
+        <div class="si" onclick="testTelegram()">
+          <div class="si-l"><div class="si-ico">🧪</div><div><div class="si-txt">Test Mesajı Gönder</div><div class="si-sub">Telegram'a test mesajı at</div></div></div>
+          <div class="si-r">→</div>
+        </div>
       </div>
+
+      <div class="sh2">💾 Uygulama</div>
+      <div class="sc">
+        <div class="si" onclick="installApp()">
+          <div class="si-l"><div class="si-ico">📱</div><div><div class="si-txt">Ana Ekrana Ekle</div><div class="si-sub">Safari → Paylaş → Ana Ekrana Ekle</div></div></div>
+          <div class="si-r">→</div>
+        </div>
+        <div class="si" onclick="exportData()">
+          <div class="si-l"><div class="si-ico">💾</div><div><div class="si-txt">Verileri Yedekle</div><div class="si-sub">JSON olarak indir</div></div></div>
+          <div class="si-r">→</div>
+        </div>
+        <div class="si" onclick="clearAll()">
+          <div class="si-l"><div class="si-ico">🗑️</div><div><div class="si-txt">Tüm Verileri Sil</div><div class="si-sub">Geri alınamaz</div></div></div>
+          <div class="si-r" style="color:var(--red)">!</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-heading">Uygulama</div>
-    <div class="settings-card">
-      <div class="settings-item" onclick="installApp()">
-        <div class="settings-item-left">
-          <div class="settings-item-icon">📱</div>
-          <div>
-            <div class="settings-item-text">Telefona Kur (PWA)</div>
-            <div class="settings-item-sub">App Store gerekmez, ücretsiz</div>
-          </div>
-        </div>
-        <div class="settings-item-right">→</div>
-      </div>
-      <div class="settings-item" onclick="exportData()">
-        <div class="settings-item-left">
-          <div class="settings-item-icon">💾</div>
-          <div>
-            <div class="settings-item-text">Verileri Dışa Aktar</div>
-            <div class="settings-item-sub">JSON formatında yedek</div>
-          </div>
-        </div>
-        <div class="settings-item-right">→</div>
-      </div>
-      <div class="settings-item" onclick="clearAll()">
-        <div class="settings-item-left">
-          <div class="settings-item-icon">🗑️</div>
-          <div>
-            <div class="settings-item-text">Tüm Verileri Sil</div>
-            <div class="settings-item-sub">Geri alınamaz</div>
-          </div>
-        </div>
-        <div class="settings-item-right" style="color:var(--danger)">!</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <div class="settings-heading">E-posta Kurulum Rehberi</div>
-    <div class="settings-card">
-      <div style="padding:16px;font-size:12px;font-family:var(--mono);color:var(--muted);line-height:1.8">
-        <div style="color:var(--accent2);font-weight:600;margin-bottom:8px">📧 E-posta Nasıl Çalışır?</div>
-        <div>1. Aşağıda e-posta adresinizi girin</div>
-        <div>2. Hatırlatma eklerken "Mail Gönder" seçin</div>
-        <div>3. EmailJS veya backend ile entegre edin</div>
-        <div style="margin-top:12px;color:var(--accent3)">⚡ Ücretsiz: EmailJS (200/ay)</div>
-        <div>veya kendi SMTP sunucunuz</div>
-      </div>
-    </div>
-  </div>
 </div>
-```
-
-  </div>
-</div>
-
-<!-- BOTTOM NAV -->
 
 <div class="bottom-nav">
-  <div class="nav-item active" onclick="switchView('daily',this)" id="navDaily">
-    <span>📋</span>
-    <span class="nav-label">Günlük</span>
-  </div>
-  <div class="nav-item" onclick="switchView('weekly',this)" id="navWeekly">
-    <span>📅</span>
-    <span class="nav-label">Haftalık</span>
-  </div>
-  <div class="nav-item" onclick="switchView('settings',this)" id="navSettings">
-    <span>⚙️</span>
-    <span class="nav-label">Ayarlar</span>
-  </div>
+  <div class="nav-item active" id="nDaily" onclick="goView('daily',this)"><span>📋</span><span class="nav-lbl">Günlük</span></div>
+  <div class="nav-item" id="nWeekly" onclick="goView('weekly',this)"><span>📅</span><span class="nav-lbl">Haftalık</span></div>
+  <div class="nav-item" id="nSettings" onclick="goView('settings',this)"><span>⚙️</span><span class="nav-lbl">Ayarlar</span></div>
 </div>
 
-<!-- FAB -->
-
-<button class="fab" onclick="openModal()" title="Yeni Hatırlatma Ekle">＋</button>
+<button class="fab" onclick="openAdd()">＋</button>
 
 <!-- ADD MODAL -->
-
-<div class="modal-overlay" id="addModal" onclick="handleOverlayClick(event)">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Yeni Hatırlatma</div>
-
-```
-<div class="form-group">
-  <label class="form-label">Başlık *</label>
-  <input type="text" class="form-input" id="inputTitle" placeholder="Ne hatırlatayım?" maxlength="80">
-</div>
-
-<div class="form-group">
-  <label class="form-label">Açıklama</label>
-  <textarea class="form-input" id="inputDesc" placeholder="Detay (opsiyonel)..."></textarea>
-</div>
-
-<div class="form-row">
-  <div class="form-group">
-    <label class="form-label">Tarih</label>
-    <input type="date" class="form-input" id="inputDate">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Saat</label>
-    <input type="time" class="form-input" id="inputTime">
-  </div>
-</div>
-
-<div class="form-row">
-  <div class="form-group">
-    <label class="form-label">Kategori</label>
-    <select class="select-input" id="inputCategory">
-      <option>İş</option>
-      <option>Sağlık</option>
-      <option>Kişisel</option>
-      <option>Toplantı</option>
-      <option>İlaç</option>
-      <option>Diğer</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Tekrar</label>
-    <select class="select-input" id="inputRepeat">
-      <option value="none">Yok</option>
-      <option value="daily">Her Gün</option>
-      <option value="weekly">Her Hafta</option>
-      <option value="monthly">Her Ay</option>
-      <option value="weekdays">Hafta içi</option>
-    </select>
-  </div>
-</div>
-
-<div class="form-group">
-  <label class="form-label">Öncelik</label>
-  <div class="priority-selector">
-    <div class="priority-btn selected-low" onclick="selectPriority('low',this)">🟢 Düşük</div>
-    <div class="priority-btn" onclick="selectPriority('medium',this)">🟡 Orta</div>
-    <div class="priority-btn" onclick="selectPriority('high',this)">🔴 Yüksek</div>
-  </div>
-</div>
-
-<div class="toggle-row">
-  <div class="toggle-info">
-    <div class="toggle-title">📱 Push Bildirim</div>
-    <div class="toggle-desc">Telefonuna hatırlatma gönder</div>
-  </div>
-  <div class="toggle on" id="toggleNotif" onclick="this.classList.toggle('on')"></div>
-</div>
-
-<div class="toggle-row">
-  <div class="toggle-info">
-    <div class="toggle-title">📧 E-posta Gönder</div>
-    <div class="toggle-desc">Mail ile de bildir</div>
-  </div>
-  <div class="toggle" id="toggleMail" onclick="this.classList.toggle('on')"></div>
-</div>
-
-<div class="email-section" id="emailSection">
-  <div class="email-section-title">📧 Mail Adresi</div>
-  <input type="email" class="form-input" id="inputEmail" placeholder="ornek@gmail.com">
-</div>
-
-<button class="submit-btn" onclick="addReminder()">✓ Hatırlatma Ekle</button>
-```
-
+<div class="overlay" id="addModal" onclick="if(event.target===this)closeAdd()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Yeni Hatırlatma</div>
+    <div class="fg"><label class="fl">Başlık *</label><input type="text" class="fi" id="iTitle" placeholder="Ne hatırlatayım?" maxlength="80"></div>
+    <div class="fg"><label class="fl">Açıklama</label><textarea class="fi" id="iDesc" placeholder="Detay (opsiyonel)..."></textarea></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Tarih</label><input type="date" class="fi" id="iDate"></div>
+      <div class="fg"><label class="fl">Saat</label><input type="time" class="fi" id="iTime"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Kategori</label>
+        <select class="fi" id="iCat"><option>İş</option><option>Sağlık</option><option>Kişisel</option><option>Toplantı</option><option>İlaç</option><option>Diğer</option></select>
+      </div>
+      <div class="fg"><label class="fl">Tekrar</label>
+        <select class="fi" id="iRepeat"><option value="none">Yok</option><option value="daily">Her Gün</option><option value="weekly">Her Hafta</option><option value="monthly">Her Ay</option><option value="weekdays">Hafta içi</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Öncelik</label>
+      <div class="prow">
+        <div class="pbtn sl" onclick="setPri('low',this)">🟢 Düşük</div>
+        <div class="pbtn" onclick="setPri('medium',this)">🟡 Orta</div>
+        <div class="pbtn" onclick="setPri('high',this)">🔴 Yüksek</div>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Kaç kez bildirim gelsin?</label>
+      <div class="nrow">
+        <div class="nopt active" onclick="setNC(1,this)">1×</div>
+        <div class="nopt" onclick="setNC(2,this)">2×</div>
+        <div class="nopt" onclick="setNC(3,this)">3×</div>
+        <div class="nopt" onclick="setNC(5,this)">5×</div>
+      </div>
+    </div>
+    <div class="trow">
+      <div class="tinfo"><div class="ttitle">📱 Push Bildirim</div><div class="tsub">Tarayıcı bildirimi gönder</div></div>
+      <div class="tog on" id="tNotif" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="trow">
+      <div class="tinfo"><div class="ttitle">💬 Telegram Mesajı</div><div class="tsub">Bot üzerinden mesaj at</div></div>
+      <div class="tog on" id="tTg" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <button class="sbtn" onclick="addRem()">✓ Hatırlatma Ekle</button>
   </div>
 </div>
 
 <!-- DETAIL MODAL -->
-
-<div class="modal-overlay" id="detailModal" onclick="handleDetailOverlayClick(event)">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="detailTitle">-</div>
-    <div class="detail-body" id="detailDesc">-</div>
-    <div class="detail-chips" id="detailChips"></div>
-    <button class="submit-btn" onclick="markDoneFromDetail()">✓ Tamamlandı Olarak İşaretle</button>
-    <button class="btn-danger" onclick="deleteFromDetail()">🗑 Sil</button>
+<div class="overlay" id="detModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="dTitle"></div>
+    <div class="dbody" id="dDesc"></div>
+    <div class="dchips" id="dChips"></div>
+    <button class="sbtn" onclick="doneDet()">✓ Tamamlandı Olarak İşaretle</button>
+    <button class="dbtn" onclick="delDet()">🗑 Sil</button>
   </div>
 </div>
-
-<!-- TOAST -->
 
 <div class="toast" id="toast"></div>
 
 <script>
-  // ==================== STATE ====================
-  let reminders = JSON.parse(localStorage.getItem('remindx_reminders') || '[]');
-  let settings = JSON.parse(localStorage.getItem('remindx_settings') || '{"earlyRemind":10,"dailySummaryTime":"08:00","weeklyReport":true,"email":""}');
-  let selectedDate = new Date();
-  let selectedDateStr = dateStr(selectedDate);
-  let currentView = 'daily';
-  let currentFilter = 'all';
-  let currentDetailId = null;
-  let selectedPriority = 'low';
-  let notifTimers = [];
-  let deferredPrompt = null;
+let rems = JSON.parse(localStorage.getItem('rx_rems') || '[]');
+let cfg = JSON.parse(localStorage.getItem('rx_cfg') || '{}');
+cfg = Object.assign({ earlyMin:10, sumTime:'08:00', email:'', tgToken:'8784933309:AAH_dZhBrBthcUnbzXq_Rvh4o90xqw8zkGM', tgChat:'5569789574' }, cfg);
 
-  // ==================== INIT ====================
-  window.addEventListener('beforeinstallprompt', e => { deferredPrompt = e; });
-  
-  document.addEventListener('DOMContentLoaded', () => {
-    // Set defaults
-    document.getElementById('inputDate').value = dateStr(new Date());
-    document.getElementById('inputTime').value = timeStr(new Date());
-    document.getElementById('inputEmail').value = settings.email || '';
-    updateEmailDisplay();
-    updateNotifStatus();
-    renderDateNav();
-    renderAll();
-    scheduleAllNotifications();
-    // Check notification permission
-    if (Notification.permission === 'granted') {
-      document.getElementById('notifBadge').style.display = 'none';
-    } else {
-      document.getElementById('notifBadge').style.display = 'grid';
-    }
+let selDate = dateStr(new Date());
+let curView = 'daily';
+let curCat = 'all';
+let detId = null;
+let selPri = 'low';
+let selNC = 1;
+let timers = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('iDate').value = selDate;
+  document.getElementById('iTime').value = new Date().toTimeString().slice(0,5);
+  loadCfgUI();
+  renderDateNav();
+  if (!rems.length) sampleData();
+  renderAll();
+  scheduleAll();
+  updateNotifUI();
+});
+
+function dateStr(d) { return d.toISOString().split('T')[0]; }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function saveRems() { localStorage.setItem('rx_rems', JSON.stringify(rems)); }
+function saveCfg() { localStorage.setItem('rx_cfg', JSON.stringify(cfg)); }
+function saveSt(k,v) { cfg[k]=v; saveCfg(); }
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function loadCfgUI() {
+  const em = document.getElementById('earlyMin'); if(em) em.value = cfg.earlyMin||10;
+  const st = document.getElementById('sumTime'); if(st) st.value = cfg.sumTime||'08:00';
+  const ts = document.getElementById('tgTokenSub'); if(ts) ts.textContent = cfg.tgToken ? cfg.tgToken.slice(0,14)+'...' : 'Ayarlanmadı';
+  const tc = document.getElementById('tgChatSub'); if(tc) tc.textContent = cfg.tgChat || 'Ayarlanmadı';
+  const es = document.getElementById('emailSub'); if(es) es.textContent = cfg.email || 'Girilmedi';
+}
+
+function renderAll() {
+  const done = rems.filter(r=>r.done).length;
+  document.getElementById('sTotal').textContent = rems.length;
+  document.getElementById('sDone').textContent = done;
+  document.getElementById('sPend').textContent = rems.length - done;
+  if (curView==='daily') renderDaily();
+  else if (curView==='weekly') renderWeekly();
+  updateNavDots();
+}
+
+function renderDateNav() {
+  const nav = document.getElementById('dateNav'); nav.innerHTML = '';
+  const days = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  for (let i=-2; i<=12; i++) {
+    const d = new Date(); d.setDate(d.getDate()+i);
+    const ds = dateStr(d);
+    const el = document.createElement('div');
+    el.className = 'date-chip'+(ds===selDate?' active':'');
+    el.dataset.date = ds;
+    el.innerHTML = `<div class="dn">${d.getDate()}</div><div class="dy">${days[d.getDay()]}</div>`;
+    el.onclick = () => pickDate(ds, el);
+    nav.appendChild(el);
+  }
+}
+
+function updateNavDots() {
+  document.querySelectorAll('.date-chip').forEach(c => {
+    c.classList.toggle('has-rem', rems.some(r=>matchDate(r,c.dataset.date)&&!r.done));
   });
+}
 
-  // ==================== HELPERS ====================
-  function dateStr(d) {
-    return d.toISOString().split('T')[0];
-  }
+function pickDate(ds, el) {
+  selDate = ds;
+  document.querySelectorAll('.date-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const d = new Date(ds+'T12:00:00');
+  document.getElementById('secLbl').textContent = ds===dateStr(new Date()) ? 'Bugünün Hatırlatmaları' : d.toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
+  renderDaily();
+}
 
-  function timeStr(d) {
-    return d.toTimeString().slice(0,5);
-  }
+function matchDate(r, ds) {
+  if (r.date===ds) return true;
+  if (r.repeat==='daily') return ds>=r.date;
+  if (r.repeat==='weekly') { const rd=new Date(r.date+'T12:00'); const sd=new Date(ds+'T12:00'); return rd.getDay()===sd.getDay()&&ds>=r.date; }
+  if (r.repeat==='weekdays') { const sd=new Date(ds+'T12:00'); const day=sd.getDay(); return day>=1&&day<=5&&ds>=r.date; }
+  if (r.repeat==='monthly') { const rd=new Date(r.date+'T12:00'); const sd=new Date(ds+'T12:00'); return rd.getDate()===sd.getDate()&&ds>=r.date; }
+  return false;
+}
 
-  function genId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2);
-  }
+function renderDaily() {
+  const list = document.getElementById('remList');
+  let arr = rems.filter(r=>matchDate(r,selDate));
+  if (curCat!=='all') arr = arr.filter(r=>r.category===curCat);
+  arr.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  document.getElementById('secCnt').textContent = arr.length ? arr.length+' hatırlatma' : '';
+  if (!arr.length) { list.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div class="empty-txt">Bu gün hatırlatma yok.<br>+ ile ekle</div></div>`; return; }
+  list.innerHTML = '';
+  arr.forEach((r,i) => list.appendChild(buildCard(r,i)));
+}
 
-  function save() {
-    localStorage.setItem('remindx_reminders', JSON.stringify(reminders));
-  }
+function catIco(c) { return{İş:'💼',Sağlık:'🏥',Kişisel:'👤',Toplantı:'📅',İlaç:'💊',Diğer:'📌'}[c]||'📌'; }
+function repLbl(v) { return{none:'',daily:'⟳ Her Gün',weekly:'⟳ Her Hafta',monthly:'⟳ Her Ay',weekdays:'⟳ Hafta içi'}[v||'none']; }
 
-  function saveSettings() {
-    localStorage.setItem('remindx_settings', JSON.stringify(settings));
-  }
-
-  function saveSetting(key, val) {
-    settings[key] = val;
-    saveSettings();
-  }
-
-  function showToast(msg, type='success') {
-    const t = document.getElementById('toast');
-    t.textContent = type === 'success' ? '✓ ' + msg : type === 'error' ? '✕ ' + msg : 'ℹ ' + msg;
-    t.className = 'toast show ' + type;
-    setTimeout(() => t.className = 'toast', 2800);
-  }
-
-  // ==================== RENDER ====================
-  function renderAll() {
-    renderStats();
-    if (currentView === 'daily') renderDailyList();
-    else if (currentView === 'weekly') renderWeekly();
-    updateDateNavDots();
-  }
-
-  function renderStats() {
-    const total = reminders.length;
-    const done = reminders.filter(r => r.done).length;
-    document.getElementById('statTotal').textContent = total;
-    document.getElementById('statDone').textContent = done;
-    document.getElementById('statPending').textContent = total - done;
-  }
-
-  function renderDateNav() {
-    const nav = document.getElementById('dateNav');
-    nav.innerHTML = '';
-    const days = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-    const today = dateStr(new Date());
-
-    for (let i = -3; i <= 10; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const ds = dateStr(d);
-      const chip = document.createElement('div');
-      chip.className = 'date-chip' + (ds === selectedDateStr ? ' active' : '');
-      chip.dataset.date = ds;
-      chip.innerHTML = `<div class="day-num">${d.getDate()}</div><div class="day-name">${days[d.getDay()]}</div>`;
-      chip.onclick = () => selectDate(ds, chip);
-      nav.appendChild(chip);
-    }
-  }
-
-  function updateDateNavDots() {
-    document.querySelectorAll('.date-chip').forEach(chip => {
-      const ds = chip.dataset.date;
-      const hasTasks = reminders.some(r => r.date === ds && !r.done);
-      chip.classList.toggle('has-tasks', hasTasks);
-    });
-  }
-
-  function selectDate(ds, chip) {
-    selectedDateStr = ds;
-    document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    const d = new Date(ds + 'T12:00:00');
-    const label = ds === dateStr(new Date()) ? 'Bugünün Hatırlatmaları' : d.toLocaleDateString('tr-TR', {day:'numeric', month:'long'});
-    document.getElementById('sectionLabel').textContent = label;
-    renderDailyList();
-  }
-
-  function renderDailyList() {
-    const list = document.getElementById('remindersList');
-    let filtered = reminders.filter(r => matchesDate(r, selectedDateStr));
-    if (currentFilter !== 'all') filtered = filtered.filter(r => r.category === currentFilter);
-    filtered.sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
-
-    document.getElementById('sectionCount').textContent = filtered.length ? `${filtered.length} hatırlatma` : '';
-
-    if (!filtered.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Bu gün için hatırlatma yok.<br>Sağ alttaki + ile ekleyebilirsin.</div></div>`;
-      return;
-    }
-
-    list.innerHTML = '';
-    filtered.forEach((r, idx) => {
-      const card = buildCard(r, idx);
-      list.appendChild(card);
-    });
-  }
-
-  function matchesDate(r, ds) {
-    if (r.date === ds) return true;
-    if (r.repeat === 'daily') return true;
-    if (r.repeat === 'weekly') {
-      const rd = new Date(r.date + 'T12:00');
-      const sd = new Date(ds + 'T12:00');
-      return rd.getDay() === sd.getDay() && ds >= r.date;
-    }
-    if (r.repeat === 'weekdays') {
-      const sd = new Date(ds + 'T12:00');
-      const day = sd.getDay();
-      return day >= 1 && day <= 5 && ds >= r.date;
-    }
-    if (r.repeat === 'monthly') {
-      const rd = new Date(r.date + 'T12:00');
-      const sd = new Date(ds + 'T12:00');
-      return rd.getDate() === sd.getDate() && ds >= r.date;
-    }
-    return false;
-  }
-
-  function buildCard(r, idx) {
-    const card = document.createElement('div');
-    card.className = `reminder-card priority-${r.priority || 'low'} ${r.done ? 'done' : ''}`;
-    card.style.animationDelay = (idx * 0.05) + 's';
-
-    const repeatLabel = {none:'',daily:'⟳ Her Gün',weekly:'⟳ Her Hafta',monthly:'⟳ Her Ay',weekdays:'⟳ Hafta içi'}[r.repeat||'none'];
-
-    card.innerHTML = `
-      <div class="check-circle ${r.done?'checked':''}" onclick="toggleDone('${r.id}',event)">${r.done?'✓':''}</div>
-      <div class="reminder-content" onclick="openDetail('${r.id}')">
-        <div class="reminder-title">${r.title}</div>
-        <div class="reminder-meta">
-          ${r.time ? `<span class="meta-tag time">⏰ ${r.time}</span>` : ''}
-          ${r.category ? `<span class="meta-tag">${catIcon(r.category)} ${r.category}</span>` : ''}
-          ${repeatLabel ? `<span class="meta-tag repeat">${repeatLabel}</span>` : ''}
-          ${r.mail ? `<span class="meta-tag mail">📧</span>` : ''}
-        </div>
+function buildCard(r, i) {
+  const el = document.createElement('div');
+  const pc = {high:'ph',medium:'pm',low:'pl'}[r.priority||'low'];
+  el.className = `rem-card ${pc} ${r.done?'done':''}`;
+  el.style.animationDelay = (i*0.04)+'s';
+  const rl = repLbl(r.repeat);
+  el.innerHTML = `
+    <div class="check-btn ${r.done?'on':''}" onclick="toggleDone('${r.id}',event)">${r.done?'✓':''}</div>
+    <div class="rem-body" onclick="openDet('${r.id}')">
+      <div class="rem-title">${r.title}</div>
+      <div class="rem-meta">
+        ${r.time?`<span class="tag t">⏰ ${r.time}</span>`:''}
+        ${r.category?`<span class="tag c">${catIco(r.category)} ${r.category}</span>`:''}
+        ${rl?`<span class="tag r">${rl}</span>`:''}
+        ${r.tg?`<span class="tag tg">💬 TG</span>`:''}
+        ${r.ncount>1?`<span class="tag r">🔔 ${r.ncount}×</span>`:''}
       </div>
-      <div class="reminder-actions">
-        <div class="action-dot delete" onclick="deleteReminder('${r.id}',event)" title="Sil">🗑</div>
-      </div>
-    `;
-    return card;
+    </div>
+    <div class="del-btn" onclick="delRem('${r.id}',event)">🗑</div>`;
+  return el;
+}
+
+function renderWeekly() {
+  const grid=document.getElementById('wGrid'), list=document.getElementById('wList');
+  const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  const today=new Date(), sow=new Date(today), dow=today.getDay();
+  sow.setDate(today.getDate()-(dow===0?6:dow-1));
+  grid.innerHTML=''; let all=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(sow); d.setDate(sow.getDate()+i);
+    const ds=dateStr(d); const dr=rems.filter(r=>matchDate(r,ds));
+    const col=document.createElement('div');
+    col.className=`wcol ${ds===dateStr(today)?'today':''} ${dr.length?'hasrem':''}`;
+    col.innerHTML=`<div class="wdy">${days[d.getDay()]}</div><div class="wcnt">${dr.length}</div>`;
+    col.onclick=()=>{goView('daily',document.getElementById('nDaily'));document.querySelectorAll('.date-chip').forEach(c=>{if(c.dataset.date===ds){pickDate(ds,c);c.scrollIntoView({behavior:'smooth',inline:'center'})}});};
+    grid.appendChild(col);
+    dr.forEach(r=>{if(!all.find(x=>x.id===r.id))all.push(r);});
   }
+  list.innerHTML='';
+  if(!all.length){list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">Bu hafta hatırlatma yok.</div></div>`;return;}
+  all.forEach((r,i)=>list.appendChild(buildCard(r,i)));
+}
 
-  function catIcon(cat) {
-    const icons = {İş:'💼',Sağlık:'🏥',Kişisel:'👤',Toplantı:'📅',İlaç:'💊',Diğer:'📌'};
-    return icons[cat] || '📌';
-  }
+function toggleDone(id, e) {
+  e.stopPropagation();
+  const r=rems.find(x=>x.id===id);
+  if(r){r.done=!r.done;saveRems();renderAll();toast(r.done?'✓ Tamamlandı!':'↩ Geri alındı',r.done?'ok':'');}
+}
 
-  function renderWeekly() {
-    const grid = document.getElementById('weeklyGrid');
-    const list = document.getElementById('weeklyList');
-    const days = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-    const today = new Date();
+function delRem(id, e) {
+  e.stopPropagation();
+  if(!confirm('Bu hatırlatmayı sil?'))return;
+  rems=rems.filter(x=>x.id!==id);saveRems();renderAll();toast('🗑 Silindi');
+}
 
-    // Find start of week (Monday)
-    const startOfWeek = new Date(today);
-    const dow = today.getDay();
-    startOfWeek.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+function setCat(el, cat) {
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');curCat=cat;renderDaily();
+}
 
-    grid.innerHTML = '';
-    let weekReminders = [];
+function setPri(p, el) { selPri=p; document.querySelectorAll('.pbtn').forEach(b=>b.className='pbtn'); el.className=`pbtn s${p[0]}`; }
+function setNC(n, el) { selNC=n; document.querySelectorAll('.nopt').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
 
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(startOfWeek);
-      d.setDate(startOfWeek.getDate() + i);
-      const ds = dateStr(d);
-      const dayRems = reminders.filter(r => matchesDate(r, ds));
-      const col = document.createElement('div');
-      col.className = `week-col ${ds === dateStr(today) ? 'today' : ''} ${dayRems.length ? 'has-tasks' : ''}`;
-      col.innerHTML = `<div class="wday">${days[d.getDay()]}</div><div class="wcount">${dayRems.length}</div><div class="wdot"></div>`;
-      col.onclick = () => {
-        switchView('daily', document.getElementById('navDaily'));
-        document.querySelectorAll('.date-chip').forEach(c => {
-          if (c.dataset.date === ds) { selectDate(ds, c); c.scrollIntoView({behavior:'smooth',inline:'center'}); }
+function addRem() {
+  const title=document.getElementById('iTitle').value.trim();
+  if(!title){toast('⚠ Başlık gerekli!','err');return;}
+  const r={
+    id:genId(), title,
+    desc:document.getElementById('iDesc').value.trim(),
+    date:document.getElementById('iDate').value,
+    time:document.getElementById('iTime').value,
+    category:document.getElementById('iCat').value,
+    repeat:document.getElementById('iRepeat').value,
+    priority:selPri, ncount:selNC,
+    notif:document.getElementById('tNotif').classList.contains('on'),
+    tg:document.getElementById('tTg').classList.contains('on'),
+    done:false, created:new Date().toISOString()
+  };
+  rems.unshift(r);saveRems();closeAdd();renderAll();
+  toast('🎉 Hatırlatma eklendi!');
+  if(r.notif) scheduleNotif(r);
+  if(r.tg) sendTelegram(r);
+}
+
+function scheduleNotif(r) {
+  if(Notification.permission!=='granted')return;
+  if(!r.date||!r.time)return;
+  const dt=new Date(r.date+'T'+r.time);
+  const early=(parseInt(cfg.earlyMin)||0)*60000;
+  const count=parseInt(r.ncount)||1;
+  for(let i=0;i<count;i++){
+    const fireAt=dt.getTime()-early+(i*5*60000);
+    const delay=fireAt-Date.now();
+    if(delay>0){
+      const t=setTimeout(()=>{
+        new Notification(`⏰ ${r.title}`,{
+          body:`${r.time} · ${r.category}${r.desc?'\n'+r.desc:''}${count>1?' ('+(i+1)+'/'+count+')':''}`,
+          tag:r.id+'_'+i, vibrate:[200,100,200]
         });
-      };
-      grid.appendChild(col);
-
-      dayRems.forEach(r => {
-        if (!weekReminders.find(x => x.id === r.id)) weekReminders.push({...r, _showDate: ds});
-      });
-    }
-
-    list.innerHTML = '';
-    if (!weekReminders.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">Bu hafta hatırlatma yok.</div></div>`;
-      return;
-    }
-
-    weekReminders.sort((a,b) => (a._showDate + (a.time||'')).localeCompare(b._showDate + (b.time||'')));
-    weekReminders.forEach((r,i) => {
-      const card = buildCard(r, i);
-      list.appendChild(card);
-    });
-  }
-
-  // ==================== ACTIONS ====================
-  function toggleDone(id, e) {
-    e.stopPropagation();
-    const r = reminders.find(x => x.id === id);
-    if (r) { r.done = !r.done; save(); renderAll(); showToast(r.done ? 'Tamamlandı!' : 'Geri alındı', r.done?'success':'info'); }
-  }
-
-  function deleteReminder(id, e) {
-    if (e) e.stopPropagation();
-    if (!confirm('Bu hatırlatmayı silmek istiyor musunuz?')) return;
-    reminders = reminders.filter(x => x.id !== id);
-    save(); renderAll(); showToast('Silindi', 'info');
-  }
-
-  function filterCat(el, cat) {
-    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    currentFilter = cat;
-    renderDailyList();
-  }
-
-  // ==================== ADD REMINDER ====================
-  function selectPriority(p, el) {
-    selectedPriority = p;
-    document.querySelectorAll('.priority-btn').forEach(b => b.className = 'priority-btn');
-    el.className = `priority-btn selected-${p}`;
-  }
-
-  function addReminder() {
-    const title = document.getElementById('inputTitle').value.trim();
-    if (!title) { showToast('Başlık gerekli!', 'error'); return; }
-
-    const reminder = {
-      id: genId(),
-      title,
-      desc: document.getElementById('inputDesc').value.trim(),
-      date: document.getElementById('inputDate').value,
-      time: document.getElementById('inputTime').value,
-      category: document.getElementById('inputCategory').value,
-      repeat: document.getElementById('inputRepeat').value,
-      priority: selectedPriority,
-      notif: document.getElementById('toggleNotif').classList.contains('on'),
-      mail: document.getElementById('toggleMail').classList.contains('on'),
-      email: document.getElementById('inputEmail').value.trim() || settings.email,
-      done: false,
-      created: new Date().toISOString()
-    };
-
-    // Save email to settings
-    if (reminder.email) { settings.email = reminder.email; saveSettings(); updateEmailDisplay(); }
-
-    reminders.unshift(reminder);
-    save();
-    closeModal();
-    renderAll();
-    showToast('Hatırlatma eklendi! 🎉');
-
-    // Schedule notification
-    if (reminder.notif) scheduleNotification(reminder);
-    if (reminder.mail && reminder.email) simulateEmailSend(reminder);
-  }
-
-  // ==================== NOTIFICATIONS ====================
-  function requestNotifPermission() {
-    Notification.requestPermission().then(p => {
-      updateNotifStatus();
-      if (p === 'granted') {
-        showToast('Bildirimler açıldı! ✓');
-        document.getElementById('notifBadge').style.display = 'none';
-        scheduleAllNotifications();
-      } else {
-        showToast('Bildirim izni verilmedi', 'error');
-      }
-    });
-  }
-
-  function updateNotifStatus() {
-    const status = document.getElementById('notifStatus');
-    const icon = document.getElementById('notifStatusIcon');
-    const p = Notification.permission;
-    if (p === 'granted') { status.textContent = 'Açık ✓'; icon.textContent = '✓'; icon.style.color = 'var(--accent3)'; }
-    else if (p === 'denied') { status.textContent = 'Engellendi'; icon.textContent = '✕'; icon.style.color = 'var(--danger)'; }
-    else { status.textContent = 'İzin gerekli - tıkla'; icon.textContent = '→'; }
-  }
-
-  function scheduleNotification(reminder) {
-    if (Notification.permission !== 'granted') return;
-    if (!reminder.date || !reminder.time) return;
-
-    const dt = new Date(reminder.date + 'T' + reminder.time);
-    const early = (settings.earlyRemind || 10) * 60 * 1000;
-    const notifTime = dt.getTime() - early;
-    const now = Date.now();
-
-    if (notifTime > now) {
-      const delay = notifTime - now;
-      const timer = setTimeout(() => {
-        new Notification(`⏰ ${reminder.title}`, {
-          body: (reminder.desc || '') + `\n${reminder.time} - ${reminder.category}`,
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
-          tag: reminder.id,
-          vibrate: [200, 100, 200]
-        });
-      }, delay);
-      notifTimers.push(timer);
+        if(r.tg) sendTelegram(r, i+1, count);
+      },delay);
+      timers.push(t);
     }
   }
+}
 
-  function scheduleAllNotifications() {
-    notifTimers.forEach(t => clearTimeout(t));
-    notifTimers = [];
-    reminders.filter(r => r.notif && !r.done).forEach(scheduleNotification);
-  }
+function scheduleAll(){timers.forEach(t=>clearTimeout(t));timers=[];rems.filter(r=>r.notif&&!r.done).forEach(scheduleNotif);}
 
-  function testNotification() {
-    if (Notification.permission !== 'granted') {
-      requestNotifPermission();
-      return;
-    }
-    new Notification('🔔 RemindX Test Bildirimi', {
-      body: 'Bildirimler çalışıyor! Harika 🎉',
-      icon: '/icon-192.png'
-    });
-    showToast('Test bildirimi gönderildi!');
-  }
+function askNotifPerm(){
+  Notification.requestPermission().then(p=>{
+    updateNotifUI();
+    if(p==='granted'){toast('✓ Bildirimler açık!');scheduleAll();}
+    else toast('✕ İzin verilmedi','err');
+  });
+}
 
-  // ==================== EMAIL ====================
-  function simulateEmailSend(reminder) {
-    // In production: integrate with EmailJS or your backend
-    console.log('📧 Email would be sent to:', reminder.email, 'for reminder:', reminder.title);
-    showToast(`📧 Mail gönderildi: ${reminder.email}`);
-    
-    // EmailJS example (uncomment and configure):
-    // emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', {
-    //   to_email: reminder.email,
-    //   reminder_title: reminder.title,
-    //   reminder_time: reminder.time,
-    //   reminder_date: reminder.date,
-    //   reminder_desc: reminder.desc
-    // });
-  }
+function updateNotifUI(){
+  const p=Notification.permission;
+  const sub=document.getElementById('notifSub'); const ico=document.getElementById('notifIco');
+  if(!sub)return;
+  if(p==='granted'){sub.textContent='Açık ✓';ico.textContent='✓';ico.style.color='var(--green)';}
+  else if(p==='denied'){sub.textContent='Engellendi';ico.textContent='✕';ico.style.color='var(--red)';}
+  else{sub.textContent='Tıkla → izin ver';ico.textContent='→';ico.style.color='';}
+}
 
-  function promptEmail() {
-    const email = prompt('E-posta adresinizi girin:', settings.email || '');
-    if (email !== null) {
-      settings.email = email;
-      saveSettings();
-      updateEmailDisplay();
-      showToast('E-posta güncellendi!');
-    }
-  }
+function testNotif(){
+  if(Notification.permission!=='granted'){askNotifPerm();return;}
+  new Notification('🔔 RemindX Test',{body:'Bildirimler çalışıyor! 🎉'});
+  toast('📳 Test bildirimi gönderildi!');
+}
 
-  function updateEmailDisplay() {
-    const el = document.getElementById('emailDisplay');
-    if (el) el.textContent = settings.email || 'Girilmedi';
-  }
+function sendTelegram(r, idx, total) {
+  if(!cfg.tgToken||!cfg.tgChat)return;
+  const nInfo=(total&&total>1)?` (${idx}/${total})`:'';
+  const text=`🔔 *${r.title}*${nInfo}\n📅 ${r.date}  ⏰ ${r.time}\n🏷 ${r.category}${r.desc?'\n📝 '+r.desc:''}`;
+  fetch(`https://api.telegram.org/bot${cfg.tgToken}/sendMessage`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:cfg.tgChat, text, parse_mode:'Markdown'})
+  }).then(res=>res.json()).then(d=>{
+    if(d.ok) toast('💬 Telegram mesajı gönderildi!');
+    else toast('Telegram hatası','err');
+  }).catch(()=>toast('Telegram bağlantı hatası','err'));
+}
 
-  // ==================== MODAL ====================
-  function openModal() {
-    document.getElementById('inputDate').value = selectedDateStr || dateStr(new Date());
-    document.getElementById('inputEmail').value = settings.email || '';
-    document.getElementById('addModal').classList.add('open');
-  }
+function testTelegram(){
+  if(!cfg.tgToken||!cfg.tgChat){toast('⚠ Token ve Chat ID girilmeli','err');return;}
+  fetch(`https://api.telegram.org/bot${cfg.tgToken}/sendMessage`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:cfg.tgChat, text:'✅ *RemindX* bağlandı\\! Hatırlatmalar buraya gelecek 🎉', parse_mode:'Markdown'})
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok) toast('💬 Test mesajı gönderildi!');
+    else toast('Hata: '+d.description,'err');
+  }).catch(()=>toast('Bağlantı hatası','err'));
+}
 
-  function closeModal() {
-    document.getElementById('addModal').classList.remove('open');
-    document.getElementById('inputTitle').value = '';
-    document.getElementById('inputDesc').value = '';
-    document.getElementById('toggleNotif').className = 'toggle on';
-    document.getElementById('toggleMail').className = 'toggle';
-    selectedPriority = 'low';
-    document.querySelectorAll('.priority-btn').forEach((b,i) => b.className = 'priority-btn' + (i===0?' selected-low':''));
-  }
+function setTgToken(){const v=prompt('Telegram Bot Token:',cfg.tgToken||'');if(v!==null){cfg.tgToken=v.trim();saveCfg();loadCfgUI();toast('✓ Token kaydedildi');}}
+function setTgChat(){const v=prompt('Telegram Chat ID:',cfg.tgChat||'');if(v!==null){cfg.tgChat=v.trim();saveCfg();loadCfgUI();toast('✓ Chat ID kaydedildi');}}
+function setEmail(){const v=prompt('E-posta:',cfg.email||'');if(v!==null){cfg.email=v.trim();saveCfg();loadCfgUI();toast('✓ E-posta kaydedildi');}}
 
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('addModal')) closeModal();
-  }
+function openAdd(){document.getElementById('iDate').value=selDate;document.getElementById('addModal').classList.add('open');}
+function closeAdd(){
+  document.getElementById('addModal').classList.remove('open');
+  document.getElementById('iTitle').value='';
+  document.getElementById('iDesc').value='';
+  document.getElementById('tNotif').className='tog on';
+  document.getElementById('tTg').className='tog on';
+  selPri='low';selNC=1;
+  document.querySelectorAll('.pbtn').forEach((b,i)=>b.className='pbtn'+(i===0?' sl':''));
+  document.querySelectorAll('.nopt').forEach((b,i)=>b.classList.toggle('active',i===0));
+}
 
-  // ==================== DETAIL ====================
-  function openDetail(id) {
-    const r = reminders.find(x => x.id === id);
-    if (!r) return;
-    currentDetailId = id;
+function openDet(id){
+  const r=rems.find(x=>x.id===id);if(!r)return;
+  detId=id;
+  document.getElementById('dTitle').textContent=r.title;
+  document.getElementById('dDesc').textContent=r.desc||'Açıklama yok.';
+  const ch=document.getElementById('dChips');ch.innerHTML='';
+  if(r.date)ch.innerHTML+=`<span class="tag c">📅 ${r.date}</span>`;
+  if(r.time)ch.innerHTML+=`<span class="tag t">⏰ ${r.time}</span>`;
+  if(r.category)ch.innerHTML+=`<span class="tag c">${catIco(r.category)} ${r.category}</span>`;
+  if(r.repeat&&r.repeat!=='none')ch.innerHTML+=`<span class="tag r">⟳ ${r.repeat}</span>`;
+  if(r.ncount>1)ch.innerHTML+=`<span class="tag r">🔔 ${r.ncount}× bildirim</span>`;
+  if(r.tg)ch.innerHTML+=`<span class="tag tg">💬 Telegram</span>`;
+  document.getElementById('detModal').classList.add('open');
+}
 
-    document.getElementById('detailTitle').textContent = r.title;
-    document.getElementById('detailDesc').textContent = r.desc || 'Açıklama yok.';
+function doneDet(){const r=rems.find(x=>x.id===detId);if(r){r.done=true;saveRems();renderAll();}document.getElementById('detModal').classList.remove('open');toast('✓ Tamamlandı!');}
+function delDet(){if(!confirm('Sil?'))return;rems=rems.filter(x=>x.id!==detId);saveRems();renderAll();document.getElementById('detModal').classList.remove('open');toast('🗑 Silindi');}
 
-    const chips = document.getElementById('detailChips');
-    chips.innerHTML = '';
-    if (r.date) chips.innerHTML += `<span class="meta-tag">📅 ${r.date}</span>`;
-    if (r.time) chips.innerHTML += `<span class="meta-tag time">⏰ ${r.time}</span>`;
-    if (r.category) chips.innerHTML += `<span class="meta-tag">${catIcon(r.category)} ${r.category}</span>`;
-    if (r.repeat && r.repeat!=='none') chips.innerHTML += `<span class="meta-tag repeat">⟳ ${r.repeat}</span>`;
-    if (r.priority) chips.innerHTML += `<span class="meta-tag">🎯 ${r.priority}</span>`;
-    if (r.mail && r.email) chips.innerHTML += `<span class="meta-tag mail">📧 ${r.email}</span>`;
+function goView(v, el){
+  curView=v;
+  document.getElementById('vDaily').style.display=v==='daily'?'':'none';
+  document.getElementById('vWeekly').style.display=v==='weekly'?'':'none';
+  document.getElementById('vSettings').style.display=v==='settings'?'':'none';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  if(v==='settings')loadCfgUI();
+  renderAll();
+}
+function openSettings(){goView('settings',document.getElementById('nSettings'));}
 
-    document.getElementById('detailModal').classList.add('open');
-  }
+function installApp(){alert('📱 iPhone\'a kurmak için:\n\n1. Bu sayfayı Safari\'de aç\n2. Alt ortadaki ↑ Paylaş butonuna bas\n3. "Ana Ekrana Ekle" seç\n4. "Ekle" bas');}
+function exportData(){const blob=new Blob([JSON.stringify({rems,cfg},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='remindx-backup.json';a.click();toast('💾 Yedek indirildi!');}
+function clearAll(){if(!confirm('Tüm verileri sil?'))return;rems=[];saveRems();renderAll();toast('🗑 Temizlendi');}
 
-  function markDoneFromDetail() {
-    const r = reminders.find(x => x.id === currentDetailId);
-    if (r) { r.done = true; save(); renderAll(); }
-    document.getElementById('detailModal').classList.remove('open');
-    showToast('Tamamlandı! ✓');
-  }
-
-  function deleteFromDetail() {
-    if (!confirm('Silmek istiyor musunuz?')) return;
-    reminders = reminders.filter(x => x.id !== currentDetailId);
-    save(); renderAll();
-    document.getElementById('detailModal').classList.remove('open');
-    showToast('Silindi', 'info');
-  }
-
-  function handleDetailOverlayClick(e) {
-    if (e.target === document.getElementById('detailModal')) document.getElementById('detailModal').classList.remove('open');
-  }
-
-  // ==================== VIEW SWITCHING ====================
-  function switchView(view, navEl) {
-    currentView = view;
-    document.getElementById('viewDaily').style.display = view === 'daily' ? '' : 'none';
-    document.getElementById('viewWeekly').style.display = view === 'weekly' ? '' : 'none';
-    document.getElementById('viewSettings').style.display = view === 'settings' ? '' : 'none';
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    navEl.classList.add('active');
-    renderAll();
-  }
-
-  function openSettings() {
-    switchView('settings', document.getElementById('navSettings'));
-  }
-
-  // ==================== SETTINGS ACTIONS ====================
-  function toggleSetting(el, key) {
-    el.classList.toggle('on');
-    settings[key] = el.classList.contains('on');
-    saveSettings();
-  }
-
-  function installApp() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(r => {
-        if (r.outcome === 'accepted') showToast('Uygulama kuruldu! 🎉');
-        deferredPrompt = null;
-      });
-    } else {
-      showToast('Safari: Paylaş → Ana Ekrana Ekle', 'info');
-      alert('📱 Telefona Kurulum:\n\niOS Safari: Paylaş (□↑) → Ana Ekrana Ekle\n\nAndroid Chrome: Menü (⋮) → Ana Ekrana Ekle\n\nBu sayfa açık kaldığı sürece bildirimler çalışır.');
-    }
-  }
-
-  function exportData() {
-    const data = { reminders, settings, exported: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'remindx-backup.json'; a.click();
-    showToast('Veriler dışa aktarıldı!');
-  }
-
-  function clearAll() {
-    if (!confirm('Tüm hatırlatmaları silmek istiyor musunuz? Bu işlem geri alınamaz!')) return;
-    reminders = []; save(); renderAll();
-    showToast('Tüm veriler silindi', 'info');
-  }
-
-  // ==================== SAMPLE DATA ====================
-  function addSampleData() {
-    const today = dateStr(new Date());
-    const tomorrow = dateStr(new Date(Date.now() + 86400000));
-    reminders = [
-      { id:genId(), title:'Doktor randevusu', desc:'Dr. Ahmet Bey, kat 3 oda 12', date:today, time:'10:30', category:'Sağlık', repeat:'none', priority:'high', notif:true, mail:false, done:false, created:new Date().toISOString() },
-      { id:genId(), title:'Proje sunumu hazırla', desc:'Q4 raporu için slaytları bitir', date:today, time:'14:00', category:'İş', repeat:'none', priority:'medium', notif:true, mail:true, email:'', done:false, created:new Date().toISOString() },
-      { id:genId(), title:'İlaç - Sabah', desc:'Aç karnına 1 tablet', date:today, time:'08:00', category:'İlaç', repeat:'daily', priority:'high', notif:true, mail:false, done:true, created:new Date().toISOString() },
-      { id:genId(), title:'Haftalık ekip toplantısı', desc:'Zoom linki: meet.example.com/team', date:tomorrow, time:'09:00', category:'Toplantı', repeat:'weekly', priority:'medium', notif:true, mail:true, email:'', done:false, created:new Date().toISOString() },
-    ];
-    save(); renderAll();
-  }
-
-  // Add sample data if first launch
-  if (reminders.length === 0) addSampleData();
+function sampleData(){
+  const t=dateStr(new Date()),tm=dateStr(new Date(Date.now()+86400000));
+  rems=[
+    {id:genId(),title:'Doktor randevusu',desc:'Dr. Ahmet Bey, kat 3',date:t,time:'10:30',category:'Sağlık',repeat:'none',priority:'high',ncount:2,notif:true,tg:true,done:false,created:new Date().toISOString()},
+    {id:genId(),title:'İlaç - Sabah',desc:'Aç karnına 1 tablet',date:t,time:'08:00',category:'İlaç',repeat:'daily',priority:'high',ncount:1,notif:true,tg:false,done:true,created:new Date().toISOString()},
+    {id:genId(),title:'Proje sunumu',desc:'Q4 raporu hazırla',date:t,time:'14:00',category:'İş',repeat:'none',priority:'medium',ncount:3,notif:true,tg:true,done:false,created:new Date().toISOString()},
+    {id:genId(),title:'Ekip toplantısı',desc:'Zoom linki',date:tm,time:'09:00',category:'Toplantı',repeat:'weekly',priority:'medium',ncount:1,notif:true,tg:false,done:false,created:new Date().toISOString()}
+  ];saveRems();
+}
 </script>
-
 </body>
 </html>
