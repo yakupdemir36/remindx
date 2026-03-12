@@ -2,7 +2,7 @@
   "name": "RemindX – Akıllı Hatırlatma",
   "short_name": "RemindX",
   "description": "Gelişmiş hatırlatma uygulaması - bildirim ve mail desteği",
-  "start_url": "/",
+  "start_url": "/remindx/",
   "display": "standalone",
   "background_color": "#06060c",
   "theme_color": "#7c5cfc",
